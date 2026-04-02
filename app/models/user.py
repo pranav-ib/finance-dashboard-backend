@@ -11,4 +11,4 @@ class User(Base):
     password = Column(String, nullable=False)
     role = Column(String, default="viewer")
     status = Column(String, default="active")
-    create_at= Column(DateTime, default=datetime.utcnow)
+    created_at= Column(DateTime, default=datetime.utcnow)
