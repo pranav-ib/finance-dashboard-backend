@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.record import FinancialRecord
@@ -55,3 +55,19 @@ def delete_record(record_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Record Deleted"}
+
+@router.get("/", response_model=list[RecordResponse])
+def get_records(
+    type: str | None = Query(None),
+    category: str | None = Query(None),
+    db : Session = Depends(get_db)):
+
+    records = db.query(FinancialRecord)
+
+    if type:
+        records = records.filter(FinancialRecord.type == type)
+
+    if category:
+        records = records.filter(FinancialRecord.category == category)
+
+    return records.all()
