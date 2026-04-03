@@ -42,3 +42,16 @@ def update_record(record_id: int, record: RecordCreate, db: Session = Depends(ge
     db.refresh(exist_record)
 
     return exist_record
+
+@router.delete("/{record_id}")
+def delete_record(record_id: int, db: Session = Depends(get_db)):
+
+    record = db.query(FinancialRecord).filter(FinancialRecord.id == record_id).first()
+
+    if not record:
+        raise HTTPException(status_code=404, detail="Record not found")
+    
+    db.delete(record)
+    db.commit()
+
+    return {"message": "Record Deleted"}
