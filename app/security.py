@@ -2,12 +2,21 @@ from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer
 from jose import jwt
 from datetime import datetime, timedelta
+from passlib.context import CryptContext
 
 SECRET_KEY="supersecretkey"
 ALGORITHM="HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES=60
 
 security = HTTPBearer()
+
+pswd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def hash_password(password: str):
+    return pswd_context.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str):
+    return pswd_context.verify(plain_password, hashed_password)
 
 def create_access_token(data: dict):
     to_encode = data.copy()

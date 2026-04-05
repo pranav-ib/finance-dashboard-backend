@@ -14,3 +14,7 @@ class UserResponse(BaseModel):
     role: str
     status: str
     created_at:datetime
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
