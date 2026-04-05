@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from datetime import date
 from app.database import get_db
 from app.models.record import FinancialRecord
 from app.schemas.record_schema import RecordCreate, RecordResponse
@@ -70,6 +71,8 @@ def delete_record(record_id: int,user=Depends(get_current_user), db: Session = D
 def get_records(
     type: str | None = Query(None),
     category: str | None = Query(None),
+    start_date: date | None = Query(None),
+    end_date: date | None = Query(None),
     user=Depends(get_current_user),
     db : Session = Depends(get_db)):
 
@@ -77,13 +80,17 @@ def get_records(
 
     if user["role"] == "viewer":
         records = records.filter(FinancialRecord.created_by == user["user_id"])
-    
-        
-
+            
     if type:
         records = records.filter(FinancialRecord.type == type)
 
     if category:
         records = records.filter(FinancialRecord.category == category)
+
+    if start_date:
+        records = records.filter(FinancialRecord.date >= start_date)
+    
+    if end_date:
+        records = records.filter(FinancialRecord.date <= end_date)
 
     return records.all()
