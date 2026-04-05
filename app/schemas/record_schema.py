@@ -1,8 +1,8 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime, date
 
 class RecordCreate(BaseModel):
-    amount: float
+    amount: float = Field(gt=0)
     type: str
     category: str
     date: date
@@ -17,4 +17,7 @@ class RecordResponse(BaseModel):
     note : str | None
     created_by: int
     created_at: datetime
+
+    class Config:
+        from_attributes = True
     

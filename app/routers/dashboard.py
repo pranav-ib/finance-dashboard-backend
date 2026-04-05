@@ -89,5 +89,5 @@ def get_trends(user= Depends(get_current_user), db: Session= Depends(get_db)):
             trends[month] = {"income":0, "expense":0}
             
         trends[month][_type] = total
-        
-    return records
+
+    return trends
