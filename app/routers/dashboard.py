@@ -70,3 +70,24 @@ def get_recent_records(user = Depends(get_current_user), db: Session = Depends(g
     
     records = records.order_by(FinancialRecord.created_at.desc()).limit(5).all()
     return records
+
+
+@router.get("/monthly-trends")
+def get_trends(user= Depends(get_current_user), db: Session= Depends(get_db)):
+
+    records = db.query(func.strftime("%Y-%m", FinancialRecord.date).label("month"), FinancialRecord.type, func.sum(FinancialRecord.amount).label("total"))
+
+    if user["role"] == "viewer":
+        records = records.filter(FinancialRecord.created_by == user["user_id"])
+
+    records = records.group_by("month", FinancialRecord.type).all()
+
+    trends = {}
+
+    for month, _type, total in records:
+        if month not in trends:
+            trends[month] = {"income":0, "expense":0}
+            
+        trends[month][_type] = total
+        
+    return records
