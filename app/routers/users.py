@@ -33,11 +33,14 @@ def create_user(user: UserCreate, db : Session= Depends(get_db)):
 def get_users(user=Depends(get_current_user), db:Session = Depends(get_db)):
 
     if user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Access denied")
+        raise HTTPException(status_code=403, detail="Only admin can access this resource")
 
     users = db.query(User).all()
 
     return users
+
+
+
 
 # Manage user by admin
 
@@ -45,7 +48,7 @@ def get_users(user=Depends(get_current_user), db:Session = Depends(get_db)):
 def update_user_role(user_id: int, new_role: str, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
 
     if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Access denied")
+        raise HTTPException(status_code=403, detail="Only admin can perform this action")
     
     user = db.query(User).filter(User.id == user_id).first()
 
@@ -62,7 +65,7 @@ def update_user_role(user_id: int, new_role: str, current_user = Depends(get_cur
 def update_user_status(user_id: int, new_status: str, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
 
     if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Access denied")
+        raise HTTPException(status_code=403, detail="Only admin can perform this action")
     
     user = db.query(User).filter(User.id == user_id).first()
 

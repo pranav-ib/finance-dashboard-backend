@@ -13,7 +13,7 @@ router = APIRouter(prefix="/records")
 def create_record(record: RecordCreate,user = Depends(get_current_user), db: Session = Depends(get_db)):
 
     if user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Access denied")
+        raise HTTPException(status_code=403, detail="Only admin can perform this action")
     
     new_record = FinancialRecord(
         amount = record.amount,
@@ -34,7 +34,7 @@ def create_record(record: RecordCreate,user = Depends(get_current_user), db: Ses
 def update_record(record_id: int, record: RecordCreate, user= Depends(get_current_user), db: Session = Depends(get_db)):
 
     if user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Access denied")
+        raise HTTPException(status_code=403, detail="Only admin can perform this action")
      
     exist_record = db.query(FinancialRecord).filter(FinancialRecord.id == record_id).first()
 
@@ -56,7 +56,7 @@ def update_record(record_id: int, record: RecordCreate, user= Depends(get_curren
 def delete_record(record_id: int,user=Depends(get_current_user), db: Session = Depends(get_db)):
 
     if user["role"] != "admin":
-       raise HTTPException(status_code=403, detail="Access denied")
+       raise HTTPException(status_code=403, detail="Only admin can perform this action")
      
     record = db.query(FinancialRecord).filter(FinancialRecord.id == record_id).first()
 
@@ -100,6 +100,5 @@ def get_records(
         records = records.filter(
             or_(FinancialRecord.category.ilike(f"%{search}%"), FinancialRecord.note.ilike(f"%{search}%"))
         )
-
 
     return records.all()
