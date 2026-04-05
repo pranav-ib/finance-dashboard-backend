@@ -1,8 +1,12 @@
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer
-from jose import jwt
+from sqlalchemy.orm import Session
+from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
+
+from app.database import get_db
+from app.models.user import User
 
 SECRET_KEY="supersecretkey"
 ALGORITHM="HS256"
@@ -32,12 +36,20 @@ def verify_access_token(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
-    except:
+    except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
     
 
 
-def get_current_user(token = Depends(security)):
+def get_current_user(token = Depends(security), db: Session = Depends(get_db)):
+    
     payload = verify_access_token(token.credentials)
+
+    user = db.query(User).filter(User.id == payload["user_id"]).first()    
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.status != "active":
+        raise HTTPException(status_code=403, detail="User account is inactive")
     
     return payload

@@ -14,6 +14,9 @@ def login(credentials: LoginRequest, db: Session = Depends(get_db)):
     if not user or not verify_password(credentials.password, user.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
+    if user.status != "active":
+        raise HTTPException(status_code=403, detail="User account is inactive")
+    
     token = create_access_token({"user_id": user.id, "role": user.role})
 
     return {"access_token": token}
@@ -30,7 +33,6 @@ def register(user: RegisterRequest, db: Session = Depends(get_db)):
         name= user.name,
         email=user.email,
         password  = hash_password(user.password),
-        role = "viewer"
     )
 
     db.add(new_user)

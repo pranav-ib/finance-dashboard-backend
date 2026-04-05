@@ -2,15 +2,18 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
-from app.schemas.user_schema import UserCreate, UserResponse
+from app.schemas.user_schema import UserCreate, UserResponse, UserRole, UserStatus
 from app.security import get_current_user, hash_password
 
 router = APIRouter(prefix="/user")
 
 
 @router.post("/", response_model=UserResponse)
-def create_user(user: UserCreate, db : Session= Depends(get_db)):
+def create_user(user: UserCreate, current_user = Depends(get_current_user), db : Session= Depends(get_db)):
     
+    if current_user["role"] != "admin":
+       raise HTTPException(403, "Only admin can create users with custom roles")
+     
     existing = db.query(User).filter(User.email == user.email).first()
 
     if existing:
@@ -45,7 +48,7 @@ def get_users(user=Depends(get_current_user), db:Session = Depends(get_db)):
 # Manage user by admin
 
 @router.put("/{user_id}/role")
-def update_user_role(user_id: int, new_role: str, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+def update_user_role(user_id: int, new_role: UserRole, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
 
     if current_user["role"] != "admin":
         raise HTTPException(status_code=403, detail="Only admin can perform this action")
@@ -62,7 +65,7 @@ def update_user_role(user_id: int, new_role: str, current_user = Depends(get_cur
     return {"message": f"User {user.name} role updated to {new_role}"}
 
 @router.put("/{user_id}/status")
-def update_user_status(user_id: int, new_status: str, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+def update_user_status(user_id: int, new_status: UserStatus, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
 
     if current_user["role"] != "admin":
         raise HTTPException(status_code=403, detail="Only admin can perform this action")

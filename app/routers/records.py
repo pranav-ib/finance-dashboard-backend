@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from datetime import date
 from app.database import get_db
 from app.models.record import FinancialRecord
-from app.schemas.record_schema import RecordCreate, RecordResponse
+from app.schemas.record_schema import RecordCreate, RecordResponse, RecordType
 from app.security import get_current_user
 
 router = APIRouter(prefix="/records")
@@ -70,7 +70,7 @@ def delete_record(record_id: int,user=Depends(get_current_user), db: Session = D
 
 @router.get("/", response_model=list[RecordResponse])
 def get_records(
-    type: str | None = Query(None),
+    type: RecordType | None = Query(None),
     category: str | None = Query(None),
     start_date: date | None = Query(None),
     end_date: date | None = Query(None),
