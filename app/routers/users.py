@@ -39,3 +39,38 @@ def get_users(user=Depends(get_current_user), db:Session = Depends(get_db)):
 
     return users
 
+# Manage user by admin
+
+@router.put("/{user_id}/role")
+def update_user_role(user_id: int, new_role: str, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.role = new_role
+    db.commit()
+    db.refresh(user)
+
+    return {"message": f"User {user.name} role updated to {new_role}"}
+
+@router.put("/{user_id}/status")
+def update_user_status(user_id: int, new_status: str, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.status = new_status
+    db.commit()
+    db.refresh(user)
+
+    return {"message": f"User {user.name} status updated to {new_status}"}
