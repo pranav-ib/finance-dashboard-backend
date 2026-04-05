@@ -3,19 +3,23 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.record import FinancialRecord
 from app.schemas.record_schema import RecordCreate, RecordResponse
+from app.security import get_current_user
 
 router = APIRouter(prefix="/records")
 
 @router.post("/")
-def create_record(record: RecordCreate, db: Session = Depends(get_db)):
+def create_record(record: RecordCreate,user = Depends(get_current_user), db: Session = Depends(get_db)):
 
+    if user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Access denied")
+    
     new_record = FinancialRecord(
         amount = record.amount,
         type = record.type,
         category = record.category,
         date= record.date,
         note = record.note,
-        created_by = 1
+        created_by = user["user_id"]
     )
 
     db.add(new_record)
@@ -25,8 +29,11 @@ def create_record(record: RecordCreate, db: Session = Depends(get_db)):
     return new_record
 
 @router.put("/{record_id}")
-def update_record(record_id: int, record: RecordCreate, db: Session = Depends(get_db)):
+def update_record(record_id: int, record: RecordCreate, user= Depends(get_current_user), db: Session = Depends(get_db)):
 
+    if user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Access denied")
+     
     exist_record = db.query(FinancialRecord).filter(FinancialRecord.id == record_id).first()
 
     if not exist_record:
@@ -44,8 +51,11 @@ def update_record(record_id: int, record: RecordCreate, db: Session = Depends(ge
     return exist_record
 
 @router.delete("/{record_id}")
-def delete_record(record_id: int, db: Session = Depends(get_db)):
+def delete_record(record_id: int,user=Depends(get_current_user), db: Session = Depends(get_db)):
 
+    if user["role"] != "admin":
+       raise HTTPException(status_code=403, detail="Access denied")
+     
     record = db.query(FinancialRecord).filter(FinancialRecord.id == record_id).first()
 
     if not record:
@@ -60,9 +70,15 @@ def delete_record(record_id: int, db: Session = Depends(get_db)):
 def get_records(
     type: str | None = Query(None),
     category: str | None = Query(None),
+    user=Depends(get_current_user),
     db : Session = Depends(get_db)):
 
     records = db.query(FinancialRecord)
+
+    if user["role"] == "viewer":
+        records = records.filter(FinancialRecord.created_by == user["user_id"])
+    
+        
 
     if type:
         records = records.filter(FinancialRecord.type == type)
