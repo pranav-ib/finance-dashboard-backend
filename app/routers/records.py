@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from datetime import date
 from app.database import get_db
@@ -73,6 +74,7 @@ def get_records(
     category: str | None = Query(None),
     start_date: date | None = Query(None),
     end_date: date | None = Query(None),
+    search: str | None = Query(None),
     user=Depends(get_current_user),
     db : Session = Depends(get_db)):
 
@@ -92,5 +94,12 @@ def get_records(
     
     if end_date:
         records = records.filter(FinancialRecord.date <= end_date)
+
+    
+    if search:
+        records = records.filter(
+            or_(FinancialRecord.category.ilike(f"%{search}%"), FinancialRecord.note.ilike(f"%{search}%"))
+        )
+
 
     return records.all()
